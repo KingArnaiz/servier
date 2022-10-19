@@ -1,12 +1,14 @@
 # Servier Data Science Technical Test
 
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/chemprop)](https://badge.fury.io/py/chemprop)
-[![PyPI version](https://badge.fury.io/py/chemprop.svg)](https://badge.fury.io/py/chemprop)
-[![Build Status](https://github.com/chemprop/chemprop/workflows/tests/badge.svg)](https://github.com/chemprop/chemprop)
+# Molecular Property Prediction
+
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/servier)](https://badge.fury.io/py/servier)
+[![PyPI version](https://badge.fury.io/py/servier.svg)](https://badge.fury.io/py/servier)
+[![Build Status](https://github.com/servier/servier/workflows/tests/badge.svg)](https://github.com/servier/servier)
 
 This repository contains message passing neural networks for molecular property prediction as described in the paper [Analyzing Learned Molecular Representations for Property Prediction](https://pubs.acs.org/doi/abs/10.1021/acs.jcim.9b00237) and as used in the paper [A Deep Learning Approach to Antibiotic Discovery](https://www.cell.com/cell/fulltext/S0092-8674(20)30102-1) for molecules.
 
-**Website:** A web prediction interface with some trained Chemprop models is available at [chemprop.csail.mit.edu](http://chemprop.csail.mit.edu).
+**Website:** A web prediction interface with some trained servier models is available at [servier.csail.mit.edu](http://servier.csail.mit.edu).
 
 ## Table of Contents
 
@@ -51,7 +53,7 @@ To use `servier` with GPUs, you will need:
 
 ## Installation
 
-Servier can either be installed from PyPi via pip or from source (i.e., directly from this git repo). The PyPi version includes a vast majority of Chemprop functionality, but some functionality is only accessible when installed from source.
+Servier can either be installed from PyPi via pip or from source (i.e., directly from this git repo). The PyPi version includes a vast majority of Servier functionality, but some functionality is only accessible when installed from source.
 
 Both options require conda, so first install Miniconda from [https://conda.io/miniconda.html](https://conda.io/miniconda.html).
 
@@ -92,7 +94,7 @@ To set a specific CUDA toolkit version, add `cudatoolkit=X.Y` to `environment.ym
 
 ## Web Interface
 
-For those less familiar with the command line, Servier also includes a web interface which allows for basic training and predicting. An example of the website (in demo mode with training disabled) is available here: [chemprop.csail.mit.edu](http://chemprop.csail.mit.edu/).
+For those less familiar with the command line, Servier also includes a web interface which allows for basic training and predicting. An example of the website (in demo mode with training disabled) is available here: [servier.csail.mit.edu](http://servier.csail.mit.edu/).
 
 You can start the web interface on your local machine in two ways. Flask is used for development mode while gunicorn is used for production mode.
 
@@ -102,7 +104,7 @@ Run `servier_web` (or optionally `python web.py` if installed from source) and t
 
 ### Gunicorn
 
-Gunicorn is only available for a UNIX environment, meaning it will not work on Windows. It is not installed by default with the rest of Chemprop, so first run:
+Gunicorn is only available for a UNIX environment, meaning it will not work on Windows. It is not installed by default with the rest of servier, so first run:
 
 ```
 pip install gunicorn
@@ -115,8 +117,8 @@ Next, navigate to `servier/web` and run `gunicorn --bind {host}:{port} 'wsgi:bui
 
 ## Within Python
 
-For information on the use of Chemprop within a python script, refer to the [Within a python script](https://chemprop.readthedocs.io/en/latest/tutorial.html#within-a-python-script)
-section of the documentation. A [Google Colab notebook](https://colab.research.google.com/github/chemprop/chemprop/blob/master/colab_demo.ipynb) is also available with several examples. Note that this notebook is intended to be run in Google Colab rather than as a Jupyter notebook on your local machine. A similar notebook of examples is available as a [nanoHUB tool](https://nanohub.org/resources/chempropdemo/).
+For information on the use of servier within a python script, refer to the [Within a python script](https://servier.readthedocs.io/en/latest/tutorial.html#within-a-python-script)
+section of the documentation. A [Google Colab notebook](https://colab.research.google.com/github/servier/servier/blob/master/colab_demo.ipynb) is also available with several examples. Note that this notebook is intended to be run in Google Colab rather than as a Jupyter notebook on your local machine. A similar notebook of examples is available as a [nanoHUB tool](https://nanohub.org/resources/servierdemo/).
 
 
 ## Data
@@ -211,7 +213,7 @@ While the model works very well on its own, especially after hyperparameter opti
 
 If you install from source, you can modify the code to load custom features as follows:
 
-1. **Generate features:** If you want to generate features in code, you can write a custom features generator function in `chemprop/features/features_generators.py`. Scroll down to the bottom of that file to see a features generator code template.
+1. **Generate features:** If you want to generate features in code, you can write a custom features generator function in `servier/features/features_generators.py`. Scroll down to the bottom of that file to see a features generator code template.
 2. **Load features:** If you have features saved as a numpy `.npy` file or as a `.csv` file, you can load the features by using `--features_path /path/to/features`. Note that the features must be in the same order as the SMILES strings in your data file. Also note that `.csv` files must have a header row and the features should be comma-separated with one line per molecule. By default, provided features will be normalized unless the flag `--no_features_scaling` is used.
 
 #### Molecule-Level RDKit 2D Features
@@ -239,9 +241,9 @@ Certain portions of the model can be loaded from a previous model and frozen so 
 
 ### Missing Target Values
 
-When training multitask models (models which predict more than one target simultaneously), sometimes not all target values are known for all molecules in the dataset. Chemprop automatically handles missing entries in the dataset by masking out the respective values in the loss function, so that partial data can be utilized, too. The loss function is rescaled according to all non-missing values, and missing values furthermore do not contribute to validation or test errors. Training on partial data is therefore possible and encouraged (versus taking out datapoints with missing target entries). No keyword is needed for this behavior, it is the default.
+When training multitask models (models which predict more than one target simultaneously), sometimes not all target values are known for all molecules in the dataset. servier automatically handles missing entries in the dataset by masking out the respective values in the loss function, so that partial data can be utilized, too. The loss function is rescaled according to all non-missing values, and missing values furthermore do not contribute to validation or test errors. Training on partial data is therefore possible and encouraged (versus taking out datapoints with missing target entries). No keyword is needed for this behavior, it is the default.
 
-In contrast, when using `sklearn_train.py` (a utility script provided within Chemprop that trains standard models such as random forests on Morgan fingerprints via the python package scikit-learn), multi-task models cannot be trained on datasets with partially missing targets. However, one can instead train individual models for each task (via the argument `--single_task`), where missing values are automatically removed from the dataset. Thus, the training still makes use of all non-missing values, but by training individual models for each task, instead of one model with multiple output values. This restriction only applies to sklearn models (via  :code:`sklearn_train` or :code:`python sklearn_train.py`), but NOT to default Chemprop models via `chemprop_train` or `python train.py`. Alternatively, missing target values can be imputed by specifying `--impute_mode <single_task/linear/median/mean/frequent>`. The option `single_task` trains single task sklearn models on each task to predict missing values and is computationally expensive. The option `linear` trains a stochastic gradient linear model on each target to compute missing targets. Both `single_task` and `linear` are applicable to regression and classification task. For regression tasks, the options `median` and `mean` furthermore compute the median and mean of the training data. For classification tasks, `frequent` computes the most frequent value for each task. For all options, models are fitted to non-missing training targets and predict missing training targets. The test set is not affected by imputing.
+In contrast, when using `sklearn_train.py` (a utility script provided within servier that trains standard models such as random forests on Morgan fingerprints via the python package scikit-learn), multi-task models cannot be trained on datasets with partially missing targets. However, one can instead train individual models for each task (via the argument `--single_task`), where missing values are automatically removed from the dataset. Thus, the training still makes use of all non-missing values, but by training individual models for each task, instead of one model with multiple output values. This restriction only applies to sklearn models (via  :code:`sklearn_train` or :code:`python sklearn_train.py`), but NOT to default servier models via `servier_train` or `python train.py`. Alternatively, missing target values can be imputed by specifying `--impute_mode <single_task/linear/median/mean/frequent>`. The option `single_task` trains single task sklearn models on each task to predict missing values and is computationally expensive. The option `linear` trains a stochastic gradient linear model on each target to compute missing targets. Both `single_task` and `linear` are applicable to regression and classification task. For regression tasks, the options `median` and `mean` furthermore compute the median and mean of the training data. For classification tasks, `frequent` computes the most frequent value for each task. For all options, models are fitted to non-missing training targets and predict missing training targets. The test set is not affected by imputing.
 
 ### Weighted Training by Target and Data
 
@@ -279,7 +281,7 @@ If installed from source, `servier_predict` can be replaced with `python predict
 
 ### Uncertainty Estimation
 
-The uncertainty of predictions made in Chemprop can be estimated by several different methods. Uncertainty estimation is carried out alongside model value prediction and reported in the predictions csv file when the argument `--uncertainty_method <method>` is provided. If no uncertainty method is provided, then only the model value predictions will be carried out. The available methods are:
+The uncertainty of predictions made in servier can be estimated by several different methods. Uncertainty estimation is carried out alongside model value prediction and reported in the predictions csv file when the argument `--uncertainty_method <method>` is provided. If no uncertainty method is provided, then only the model value predictions will be carried out. The available methods are:
 
 * `ensemble` For a prediction using an ensemble of models. Returns the variance of predictions made by each of the ensemble submodels. Ensemble variance can be used with any dataset type, but the results are only usable for calibration or evaluation with regression datasets.
 * `dropout` Intended for use with a single model and not an ensemble. This method uses Monte Carlo dropout to generate a virtual ensemble of models and reports the ensemble variance of the predictions. The number of models generated and the probability of dropout can be changed using `--uncertainty_dropout_p <float>` and `--dropout_sampling_size <int>`, respectively. Note that this dropout is distinct from dropout regularization used during training, which is not active during predictions.
@@ -298,7 +300,7 @@ Uncertainty predictions may be calibrated to improve their performance on new pr
 * `zelikman_interval` Assumes that the error distribution is the same for each prediction but scaled by the uncalibrated standard deviation for each. Multiplies the uncalibrated standard deviation by a factor necessary to cover the specified interval of the calibration set. Does not assume a Gaussian distribution. Intended for use with intervals but can return a stdev as well. (https://arxiv.org/abs/2005.12496)
 * `mve_weighting` For use with ensembles of models trained with mve or evidential loss function. Uses a weighted average of the predicted variances to achieve a minimum negative log likelihood of predictions. (https://doi.org/10.1186/s13321-021-00551-x)
 **Classification**
-* `platt` Uses a linear scaling before the sigmoid function in prediction to minimize the negative log likelihood of the predictions. If the model checkpoint was generated after Chemprop v1.5.0, then a Bayesian correction is applied to account for the class balance in the training set during prediction. Implemented for classification but not multiclass datasets. (https://arxiv.org/abs/1706.04599)
+* `platt` Uses a linear scaling before the sigmoid function in prediction to minimize the negative log likelihood of the predictions. If the model checkpoint was generated after servier v1.5.0, then a Bayesian correction is applied to account for the class balance in the training set during prediction. Implemented for classification but not multiclass datasets. (https://arxiv.org/abs/1706.04599)
 * `isotonic` Fits an isotonic regression model to the predictions. Prediction outputs are transformed using a stepped histogram-style to match the empirical probability observed in the calibration data. Number and size of the histogram bins are procedurally decided. Histogram bins are wider in the regions of the model output that are less reliable in ordering confidence. Implemented for both classification and multiclass datasets. (https://arxiv.org/abs/1706.04599)
 
 ### Uncertainty Evaluation Metrics
@@ -319,20 +321,20 @@ Evaluations can be used to compare different uncertainty methods and different c
 
 Although the default message passing architecture works well on a variety of datasets, optimizing the hyperparameters for a particular dataset often leads to improvement in performance. We have automated hyperparameter optimization via Bayesian optimization (using the [hyperopt](https://github.com/hyperopt/hyperopt) package). The default hyperparameter optimization will search for the best configuration of hidden size, depth, dropout, and number of feed-forward layers for our model. Optimization can be run as follows:
 ```
-chemprop_hyperopt --data_path <data_path> --dataset_type <type> --num_iters <int> --config_save_path <config_path>
+servier_hyperopt --data_path <data_path> --dataset_type <type> --num_iters <int> --config_save_path <config_path>
 ```
-where `<int>` is the number of hyperparameter trial configurations to try and `<config_path>` is the path to a `.json` file where the optimal hyperparameters will be saved. If installed from source, `chemprop_hyperopt` can be replaced with `python hyperparameter_optimization.py`. Additional training arguments can also be supplied during submission, and they will be applied to all included training iterations (`--epochs`, `--aggregation`, `--num_folds`, `--gpu`, `--ensemble_size`, `--seed`, etc.). The argument `--log_dir <dir_path>` can optionally be provided to set a location for the hyperparameter optimization log.
+where `<int>` is the number of hyperparameter trial configurations to try and `<config_path>` is the path to a `.json` file where the optimal hyperparameters will be saved. If installed from source, `servier_hyperopt` can be replaced with `python hyperparameter_optimization.py`. Additional training arguments can also be supplied during submission, and they will be applied to all included training iterations (`--epochs`, `--aggregation`, `--num_folds`, `--gpu`, `--ensemble_size`, `--seed`, etc.). The argument `--log_dir <dir_path>` can optionally be provided to set a location for the hyperparameter optimization log.
 
 Once hyperparameter optimization is complete, the optimal hyperparameters can be applied during training by specifying the config path as follows:
 ```
-chemprop_train --data_path <data_path> --dataset_type <type> --config_path <config_path>
+servier_train --data_path <data_path> --dataset_type <type> --config_path <config_path>
 ```
 
 Note that the hyperparameter optimization script sees all the data given to it. The intended use is to run the hyperparameter optimization script on a dataset with the eventual test set held out. If you need to optimize hyperparameters separately for several different cross validation splits, you should e.g. set up a bash script to run hyperparameter_optimization.py separately on each split's training and validation data with test held out.
 
 ### Choosing the Search Parameters
 
-The parameter space being searched can be changed to include different sets of model hyperparameters. These can be selected using the argument `--search_parameter_keywords <list-of-keywords>`. The available keywords are listed below. Some keywords refer to bundles of parameters or other special behavior. Note that the search ranges for each parameter is hardcoded and can be viewed or changed in `chemprop/hyperopt_utils.py`.
+The parameter space being searched can be changed to include different sets of model hyperparameters. These can be selected using the argument `--search_parameter_keywords <list-of-keywords>`. The available keywords are listed below. Some keywords refer to bundles of parameters or other special behavior. Note that the search ranges for each parameter is hardcoded and can be viewed or changed in `servier/hyperopt_utils.py`.
 
 Special keywords
 * basic - the default set of hyperparameters for search: depth, ffn_num_layers, dropout, and linked_hidden_size.
@@ -382,23 +384,23 @@ Latent representations of molecules are taken from intermediate stages of the pr
 
 Example input:
 ```
-chemprop_fingerprint --test_path data/tox21.csv --checkpoint_dir tox21_checkpoints --preds_path tox21_fingerprint.csv
+servier_fingerprint --test_path data/tox21.csv --checkpoint_dir tox21_checkpoints --preds_path tox21_fingerprint.csv
 ```
 or
 ```
-chemprop_fingerprint --test_path data/tox21.csv --checkpoint_path tox21_checkpoints/fold_0/model_0/model.pt --preds_path tox21_fingerprint.csv
+servier_fingerprint --test_path data/tox21.csv --checkpoint_path tox21_checkpoints/fold_0/model_0/model.pt --preds_path tox21_fingerprint.csv
 ```
 
-If installed from source, `chemprop_fingerprint` can be replaced with `python fingerprint.py`.
+If installed from source, `servier_fingerprint` can be replaced with `python fingerprint.py`.
 
 ## Interpreting
 
 It is often helpful to provide explanation of model prediction (i.e., this molecule is toxic because of this substructure). Given a trained model, you can interpret the model prediction using the following command:
 ```
-chemprop_interpret --data_path data/tox21.csv --checkpoint_dir tox21_checkpoints/fold_0/ --property_id 1
+servier_interpret --data_path data/tox21.csv --checkpoint_dir tox21_checkpoints/fold_0/ --property_id 1
 ```
 
-If installed from source, `cservier_interpret` can be replaced with `python interpret.py`.
+If installed from source, `servier_interpret` can be replaced with `python interpret.py`.
 
 ## TensorBoard
 
