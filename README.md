@@ -1,11 +1,5 @@
 # Servier Data Science Technical Test
 
-# Molecular Property Prediction
-
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/servier)](https://badge.fury.io/py/servier)
-[![PyPI version](https://badge.fury.io/py/servier.svg)](https://badge.fury.io/py/servier)
-[![Build Status](https://github.com/servier/servier/workflows/tests/badge.svg)](https://github.com/servier/servier)
-
 This repository contains message passing neural networks for molecular property prediction as described in the paper [Analyzing Learned Molecular Representations for Property Prediction](https://pubs.acs.org/doi/abs/10.1021/acs.jcim.9b00237) and as used in the paper [A Deep Learning Approach to Antibiotic Discovery](https://www.cell.com/cell/fulltext/S0092-8674(20)30102-1) for molecules.
 
 **Website:** A web prediction interface with some trained servier models is available at [servier.csail.mit.edu](http://servier.csail.mit.edu).
