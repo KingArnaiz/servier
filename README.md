@@ -4,17 +4,9 @@
 [![PyPI version](https://badge.fury.io/py/chemprop.svg)](https://badge.fury.io/py/chemprop)
 [![Build Status](https://github.com/chemprop/chemprop/workflows/tests/badge.svg)](https://github.com/chemprop/chemprop)
 
-This repository contains message passing neural networks for molecular property prediction as described in the paper [Analyzing Learned Molecular Representations for Property Prediction](https://pubs.acs.org/doi/abs/10.1021/acs.jcim.9b00237) and as used in the paper [A Deep Learning Approach to Antibiotic Discovery](https://www.cell.com/cell/fulltext/S0092-8674(20)30102-1) for molecules and [Machine Learning of Reaction Properties via Learned Representations of the Condensed Graph of Reaction](https://doi.org/10.1021/acs.jcim.1c00975) for reactions.
-
-**Documentation:** Full documentation of Chemprop is available at https://chemprop.readthedocs.io/en/latest/.
+This repository contains message passing neural networks for molecular property prediction as described in the paper [Analyzing Learned Molecular Representations for Property Prediction](https://pubs.acs.org/doi/abs/10.1021/acs.jcim.9b00237) and as used in the paper [A Deep Learning Approach to Antibiotic Discovery](https://www.cell.com/cell/fulltext/S0092-8674(20)30102-1) for molecules.
 
 **Website:** A web prediction interface with some trained Chemprop models is available at [chemprop.csail.mit.edu](http://chemprop.csail.mit.edu).
-
-**Tutorial:** These [slides](https://docs.google.com/presentation/d/14pbd9LTXzfPSJHyXYkfLxnK8Q80LhVnjImg8a3WqCRM/edit?usp=sharing) provide a Chemprop tutorial and highlight recent additions as of April 28th, 2020.
-
-## COVID-19 Update
-
-Please see [aicures.mit.edu](https://aicures.mit.edu) and the associated [data GitHub repo](https://github.com/yangkevin2/coronavirus_data) for information about our recent efforts to use Chemprop to identify drug candidates for treating COVID-19.
 
 ## Table of Contents
 
@@ -36,9 +28,6 @@ Please see [aicures.mit.edu](https://aicures.mit.edu) and the associated [data G
     * [Custom Features](#molecule-level-custom-features)
     * [RDKit 2D Features](#molecule-level-rdkit-2d-features)
     * [Atomic Features](#atom-level-features)
-  * [Spectra](#spectra)
-  * [Reaction](#reaction)
-  * [Reaction in a solvent / Reaction and a molecule](#reaction-in-a-solvent--reaction-and-a-molecule)
   * [Pretraining](#pretraining)
   * [Missing target values](#missing-target-values)
   * [Weighted training by target and data](#weighted-training-by-target-and-data)
@@ -52,22 +41,17 @@ Please see [aicures.mit.edu](https://aicures.mit.edu) and the associated [data G
   * [Checkpoints and Parallel Operation](#checkpoints-and-parallel-operation)
   * [Random or Directed Search](#random-or-directed-search)
   * [Manual Trials](#manual-trials)
-- [Encode Fingerprint Latent Representation](#encode-fingerprint-latent-representation)
 - [Interpreting Model Prediction](#interpreting)
 - [TensorBoard](#tensorboard)
-- [Results](#results)
 
 ## Requirements
-
-For small datasets (~1000 molecules), it is possible to train models within a few minutes on a standard laptop with CPUs only. However, for larger datasets and larger Chemprop models, we recommend using a GPU for significantly faster training.
-
-To use `chemprop` with GPUs, you will need:
+To use `servier` with GPUs, you will need:
  * cuda >= 8.0
  * cuDNN
 
 ## Installation
 
-Chemprop can either be installed from PyPi via pip or from source (i.e., directly from this git repo). The PyPi version includes a vast majority of Chemprop functionality, but some functionality is only accessible when installed from source.
+Servier can either be installed from PyPi via pip or from source (i.e., directly from this git repo). The PyPi version includes a vast majority of Chemprop functionality, but some functionality is only accessible when installed from source.
 
 Both options require conda, so first install Miniconda from [https://conda.io/miniconda.html](https://conda.io/miniconda.html).
 
@@ -75,29 +59,29 @@ Then proceed to either option below to complete the installation. Note that on m
 
 ### Option 1: Installing from PyPi
 
-1. `conda create -n chemprop python=3.8`
-2. `conda activate chemprop`
+1. `conda create -n servier python=3.8`
+2. `conda activate servier`
 3. `conda install -c conda-forge rdkit`
 4. `pip install git+https://github.com/bp-kelley/descriptastorus`
-5. `pip install chemprop`
+5. `pip install servier`
 
 ### Option 2: Installing from source
 
-1. `git clone https://github.com/chemprop/chemprop.git`
-2. `cd chemprop`
+1. `git clone https://github.com/servier/servier.git`
+2. `cd servier`
 3. `conda env create -f environment.yml`
-4. `conda activate chemprop`
+4. `conda activate servier`
 5. `pip install -e .`
 
 ### Docker
 
-Chemprop can also be installed with Docker. Docker makes it possible to isolate the Chemprop code and environment. To install and run our code in a Docker container, follow these steps:
+Servier can also be installed with Docker. Docker makes it possible to isolate the Servier code and environment. To install and run our code in a Docker container, follow these steps:
 
-1. `git clone https://github.com/chemprop/chemprop.git`
-2. `cd chemprop`
+1. `git clone https://github.com/servier/servier.git`
+2. `cd servier`
 3. Install Docker from [https://docs.docker.com/install/](https://docs.docker.com/install/)
-4. `docker build -t chemprop .`
-5. `docker run -it chemprop:latest`
+4. `docker build -t servier .`
+5. `docker run -it servier:latest`
 
 Note that you will need to run the latter command with nvidia-docker if you are on a GPU machine in order to be able to access the GPUs.
 Alternatively, with Docker 19.03+, you can specify the `--gpus` command line option instead.
@@ -108,13 +92,13 @@ To set a specific CUDA toolkit version, add `cudatoolkit=X.Y` to `environment.ym
 
 ## Web Interface
 
-For those less familiar with the command line, Chemprop also includes a web interface which allows for basic training and predicting. An example of the website (in demo mode with training disabled) is available here: [chemprop.csail.mit.edu](http://chemprop.csail.mit.edu/).
+For those less familiar with the command line, Servier also includes a web interface which allows for basic training and predicting. An example of the website (in demo mode with training disabled) is available here: [chemprop.csail.mit.edu](http://chemprop.csail.mit.edu/).
 
 You can start the web interface on your local machine in two ways. Flask is used for development mode while gunicorn is used for production mode.
 
 ### Flask
 
-Run `chemprop_web` (or optionally `python web.py` if installed from source) and then navigate to [localhost:5000](http://localhost:5000) in a web browser.
+Run `servier_web` (or optionally `python web.py` if installed from source) and then navigate to [localhost:5000](http://localhost:5000) in a web browser.
 
 ### Gunicorn
 
@@ -124,7 +108,7 @@ Gunicorn is only available for a UNIX environment, meaning it will not work on W
 pip install gunicorn
 ```
 
-Next, navigate to `chemprop/web` and run `gunicorn --bind {host}:{port} 'wsgi:build_app()'`. This will start the site in production mode.
+Next, navigate to `servier/web` and run `gunicorn --bind {host}:{port} 'wsgi:build_app()'`. This will start the site in production mode.
    * To run this server in the background, add the `--daemon` flag.
    * Arguments including `init_db` and `demo` can be passed with this pattern: `'wsgi:build_app(init_db=True, demo=True)'` 
    * Gunicorn documentation can be found [here](http://docs.gunicorn.org/en/stable/index.html).
@@ -139,13 +123,12 @@ section of the documentation. A [Google Colab notebook](https://colab.research.g
 
 In order to train a model, you must provide training data containing molecules (as SMILES strings) and known target values.
 
-Chemprop can either train on a single target ("single tasking") or on multiple targets simultaneously ("multi-tasking").
+Servier can either train on a single target ("single tasking") or on multiple targets simultaneously ("multi-tasking").
 
 There are four current supported dataset types. Targets with unknown values can be left as blanks.
 * **Regression.** Targets are float values. With bounded loss functions or metrics, the values may also be simple inequalities (e.g., >7.5 or <5.0).
 * **Classification.** Targets are binary (i.e. 0s and 1s) indicators of the classification.
 * **Multiclass.** Targets are integers (starting with zero) indicating which class the datapoint belongs to, out of a total number of exclusive classes indicated with `--multiclass_num_classes <int>`.
-* **Spectra.** Targets are positive float values with each target representing the signal at a specific spectrum position.
 
 The data file must be be a **CSV file with a header row**. For example:
 ```
@@ -157,24 +140,22 @@ CCN1C(=O)NC(c2ccccc2)C1=O,0,,0
 
 By default, it is assumed that the SMILES are in the first column (can be changed using `--number_of_molecules`) and the targets are in the remaining columns. However, the specific columns containing the SMILES and targets can be specified using the `--smiles_columns <column_1> ...` and `--target_columns <column_1> <column_2> ...` flags, respectively.
 
-Datasets from [MoleculeNet](https://moleculenet.org/) and a 450K subset of ChEMBL from [http://www.bioinf.jku.at/research/lsc/index.html](http://www.bioinf.jku.at/research/lsc/index.html) have been preprocessed and are available in `data.tar.gz`. To uncompress them, run `tar xvzf data.tar.gz`.
-
 ## Training
 
 To train a model, run:
 ```
-chemprop_train --data_path <path> --dataset_type <type> --save_dir <dir>
+servier_train --data_path <path> --dataset_type <type> --save_dir <dir>
 ```
 where `<path>` is the path to a CSV file containing a dataset, `<type>` is one of [classification, regression, multiclass, spectra] depending on the type of the dataset, and `<dir>` is the directory where model checkpoints will be saved.
 
 For example:
 ```
-chemprop_train --data_path data/tox21.csv --dataset_type classification --save_dir tox21_checkpoints
+servier_train --data_path data/sample_train.csv --dataset_type classification --save_dir model1_checkpoints
 ```
 
-A full list of available command-line arguments can be found in [chemprop/args.py](https://github.com/chemprop/chemprop/blob/master/chemprop/args.py).
+A full list of available command-line arguments can be found in [servier/args.py](https://github.com/servier/servier/blob/master/servier/args.py).
 
-If installed from source, `chemprop_train` can be replaced with `python train.py`.
+If installed from source, `servier_train` can be replaced with `python train.py`.
 
 Notes:
 * The default metric for classification is AUC and the default metric for regression is RMSE. Other metrics may be specified with `--metric <metric>`.
@@ -244,69 +225,6 @@ The full list of available features for `--features_generator` is as follows.
 `rdkit_2d` is an unnormalized version of 200 assorted rdkit descriptors. Full list can be found at the bottom of our paper: https://arxiv.org/pdf/1904.01561.pdf
 `rdkit_2d_normalized` is the CDF-normalized version of the 200 rdkit descriptors.
 
-#### Atom-Level Features
-
-Similar to the additional molecular features described above, you can also provide additional atomic features via `--atom_descriptors_path /path/to/features` with valid file formats:
-* `.npz` file, where descriptors are saved as 2D array for each molecule in the exact same order as the SMILES strings in your data file.
-* `.pkl` / `.pckl` / `.pickle` containing a pandas dataframe with smiles as index and a numpy array of descriptors as columns.
-* `.sdf` containing all mol blocks with descriptors as entries.
-
-The order of the descriptors for each atom per molecule must match the ordering of atoms in the RDKit molecule object. Further information on supplying atomic descriptors can be found [here](https://github.com/chemprop/chemprop/releases/tag/v1.1.0). 
-
-Users must select in which way atom descriptors are used. The command line option `--atom_descriptors descriptor` concatenates the new features to the embedded atomic features after the D-MPNN with an additional linear layer. The option `--atom_descriptors feature` concatenates the features to each atomic feature vector before the D-MPNN, so that they are used during message-passing. Alternatively, the user can overwrite the default atom features with the custom features using the option `--overwrite_default_atom_features`. 
-
-Similar to the molecule-level features, the atom-level descriptors and features are scaled by default. This can be disabled with the option `--no_atom_descriptor_scaling`
-
-#### Bond-Level Features
-
-Bond-level features can be provided in the same format as the atom-level features, using the option `--bond_features_path /path/to/features`. The order of the features for each molecule must match the bond ordering in the RDKit molecule object. 
-
-The bond-level features are concatenated with the bond feature vectors before the D-MPNN, such that they are used during message-passing. Alternatively, the user can overwrite the default bond features with the custom features using the option `--overwrite_default_bond_features`. 
-
-Similar to molecule-, and atom-level features, the bond-level features are scaled by default. This can be disabled with the option `--no_bond_features_scaling`.
-
-### Spectra
-
-One of the data types that can be trained with Chemprop is "spectra". Spectra training is different than other datatypes because it considers the predictions of all targets together. Targets for spectra should be provided as the values for the spectrum at a specific position in the spectrum. The loss function for spectra is SID, spectral information divergence. Alternatively, Wasserstein distance (earthmover's distance) can be used for both loss function and metric with input arguments `--metric wasserstein --loss_function wasserstein`.
-
-Spectra predictions are configured to return only positive values and normalize them to sum each spectrum to 1. Activation to enforce positivity is an exponential function by default but can also be set as a Softplus function, according to the argument `--spectra_activation <exp or softplus>`. Value positivity is enforced on input targets as well using a floor value that replaces negative or smaller target values with the floor value (default 1e-8), customizable with the argument `--spectra_target_floor <float>`.
-
-In absorption spectra, sometimes the phase of collection will create regions in the spectrum where data collection or prediction would be unreliable. To exclude these regions, include paths to phase features for your data (`--phase_features_path <path>`) and a mask indicating the spectrum regions that are supported (`--spectra_phase_mask_path <path>`). The format for the mask file is a `.csv` file with columns for the spectrum positions and rows for the phases, with column and row labels in the same order as they appear in the targets and features files.
-
-### Reaction
-
-As an alternative to molecule SMILES, Chemprop can also process atom-mapped reaction SMILES (see [Daylight manual](https://www.daylight.com/meetings/summerschool01/course/basics/smirks.html) for details on reaction SMILES), which consist of three parts denoting reactants, agents and products, separated by ">". Use the option `--reaction` to enable the input of reactions, which transforms the reactants and products of each reaction to the corresponding condensed graph of reaction and changes the initial atom and bond features to hold information from both the reactant and product (option `--reaction_mode reac_prod`), or from the reactant and the difference upon reaction (option `--reaction_mode reac_diff`, default) or from the product and the difference upon reaction (option `--reaction_mode prod_diff`). In reaction mode, Chemprop thus concatenates information to each atomic and bond feature vector, for example, with option `--reaction_mode reac_prod`, each atomic feature vector holds information on the state of the atom in the reactant (similar to default Chemprop), and concatenates information on the state of the atom in the product, so that the size of the D-MPNN increases slightly. Agents are discarded. Functions incompatible with a reaction as input (scaffold splitting and feature generation) are carried out on the reactants only. If the atom-mapped reaction SMILES contain mapped hydrogens, enable explicit hydrogens via `--explicit_h`. Example of an atom-mapped reaction SMILES denoting the reaction of methanol to formaldehyde without hydrogens: `[CH3:1][OH:2]>>[CH2:1]=[O:2]` and with hydrogens: `[C:1]([H:3])([H:4])([H:5])[O:2][H:6]>>[C:1]([H:3])([H:4])=[O:2].[H:5][H:6]`. The reactions do not need to be balanced and can thus contain unmapped parts, for example leaving groups, if necessary. With reaction modes `reac_prod`, `reac_diff` and `prod_diff`, the atom and bond features of unbalanced aroma are set to zero on the side of the reaction they are not specified. Alternatively, features can be set to the same values on the reactant and product side via the modes `reac_prod_balance`, `reac_diff_balance` and `prod_diff_balance`, which corresponds to a rough balancing of the reaction.
-For further details and benchmarking, as well as a citable reference, please refer to the [article](https://doi.org/10.1021/acs.jcim.1c00975).
-
-### Reaction in a solvent / Reaction and a molecule]
-
-Chemprop can process a reaction in a solvent or a reaction and a molecule with the `--reaction_solvent` option. While this
-option is originally built to model a reaction in a solvent, this option works for any reaction and a molecule where 
-the molecule can represent anything, i.e. a solvent, a reagent, etc.
-This requires the input csv file to have two separate columns of SMILES: one column for atom-mapped reaction SMILES 
-and the other column for solvent/molecule SMILES. The reaction and solvent/molecule SMILES columns can be ordered in 
-any way (i.e. the first column can be either reaction SMILES or solvent SMILES and the second column can then be 
-solvent SMILES or reaction SMILES). However, the same column ordering as used in the training must be used for the prediction
-(i.e. if the input csv file used for model training had reaction SMILES as the first column and solvent SMILES as the 
-second columns, the csv file used for prediction should also have the first column as reaction SMILES and second column 
-as the solvent SMILES). For the information on atom-mapped reaction SMILES, please refer to [Reaction](#reaction).
-
-When using the `--reaction_solvent` option, `--number_of_molecules` must be set to 2. All options listed in the [Reaction](#reaction) 
-section such as different `--reaction_mode` and `--explicit_h` can be used for `--reaction_solvent`. Note that 
-`--explicit_h` option is only applicable to reaction SMILES. The `--adding_h` option can be used instead for 
-solvent/molecule if one wishes to add hydrogens to solvent/molecule SMILES. Chemprop allows differently sized MPNNs to be used for each 
-reaction and solvent/molecule encoding. Below are the input arguments for specifying the size and option of the two MPNNs:
-* Reaction:
-  * `--bias` Whether to add bias to linear layers.
-  * `--hidden_size` Dimensionality of hidden layers.
-  * `--depth` Number of message passing steps.
-  * `--explicit_h` Whether H are explicitly specified in input and should be kept this way. Only applicable to reaction SMILES.
-* Solvent / Molecule:
-  * `--bias_solvent` Whether to add bias to linear layers for solvent/molecule MPN.
-  * `--hidden_size_solvent` Dimensionality of hidden layers in solvent/molecule MPN.
-  * `--depth_solvent` Number of message passing steps for solvent/molecule.
-  * `--adding_h` Whether RDKit molecules will be constructed with adding the Hs to them. Applicable to any SMILES that is not reaction.
-
 ### Pretraining
 
 Pretraining can be carried out using previously trained checkpoint files to set some or all of the initial values of a model for training. Additionally, some model parameters from the previous model can be frozen in place, so that they will not be updated during training.
@@ -348,16 +266,16 @@ To load a trained model and make predictions, run `predict.py` and specify:
 
 For example:
 ```
-chemprop_predict --test_path data/tox21.csv --checkpoint_dir tox21_checkpoints --preds_path tox21_preds.csv
+servier_predict --test_path data/sample_test.csv --checkpoint_dir model2_checkpoints --preds_path sample_test_preds.csv
 ```
 or
 ```
-chemprop_predict --test_path data/tox21.csv --checkpoint_path tox21_checkpoints/fold_0/model_0/model.pt --preds_path tox21_preds.csv
+servier_predict --test_path data/sample_test.csv --checkpoint_path model2_checkpoints/fold_0/model_0/model.pt --preds_path sample_test_preds.csv
 ```
 
 Predictions made on an ensemble of models will return the average of the individual model predictions. To return the individual model predictions as well, include the `--individual_ensemble_predictions` argument.
 
-If installed from source, `chemprop_predict` can be replaced with `python predict.py`.
+If installed from source, `servier_predict` can be replaced with `python predict.py`.
 
 ### Uncertainty Estimation
 
@@ -480,28 +398,9 @@ It is often helpful to provide explanation of model prediction (i.e., this molec
 chemprop_interpret --data_path data/tox21.csv --checkpoint_dir tox21_checkpoints/fold_0/ --property_id 1
 ```
 
-If installed from source, `chemprop_interpret` can be replaced with `python interpret.py`.
-
-The output will be like the following:
-* The first column is a molecule and second column is its predicted property (in this case NR-AR toxicity). 
-* The third column is the smallest substructure that made this molecule classified as toxic (which we call rationale). 
-* The fourth column is the predicted toxicity of that substructure. 
-
-As shown in the first row, when a molecule is predicted to be non-toxic, we will not provide any rationale for its prediction. 
-
-smiles | NR-AR | rationale | rationale_score
-| :---: | :---: | :---: | :---: |
-O=\[N+\](\[O-\])c1cc(C(F)(F)F)cc(\[N+\](=O)\[O-\])c1Cl | 0.014 | | | 
-CC1(C)O\[C@@H\]2C\[C@H\]3\[C@@H\]4C\[C@H\](F)C5=CC(=O)C=C\[C@\]5(C)\[C@H\]4\[C@@H\](O)C\[C@\]3(C)\[C@\]2(C(=O)CO)O1 | 0.896 | C\[C@\]12C=CC(=O)C=C1\[CH2:1\]C\[CH2:1\]\[CH2:1\]2 | 0.769 |
-C\[C@\]12CC\[C@H\]3\[C@@H\](CC\[C@@\]45O\[C@@H\]4C(O)=C(C#N)C\[C@\]35C)\[C@@H\]1CC\[C@@H\]2O | 0.941 | C\[C@\]12C\[CH:1\]=\[CH:1\]\[C@H\]3O\[C@\]31CC\[C@@H\]1\[C@@H\]2CC\[C:1\]\[CH2:1\]1 | 0.808 |
-C\[C@\]12C\[C@H\](O)\[C@H\]3\[C@@H\](CCC4=CC(=O)CC\[C@@\]43C)\[C@@H\]1CC\[C@\]2(O)C(=O)COP(=O)(\[O-\])\[O-\] | 0.957 | C1C\[CH2:1\]\[C:1\]\[C@@H\]2\[C@@H\]1\[C@@H\]1CC\[C:1\]\[C:1\]1C\[CH2:1\]2</pre> | 0.532 | 
-
-Chemprop's interpretation script explains model prediction one property at a time. `--property_id 1` tells the script to provide explanation for the first property in the dataset (which is NR-AR). In a multi-task training setting, you will need to change `--property_id` to provide explanation for each property in the dataset.
-
-For computational efficiency, we currently restricted the rationale to have maximum 20 atoms and minimum 8 atoms. You can adjust these constraints through `--max_atoms` and `--min_atoms` argument.
-
-Please note that the interpreting framework is currently only available for models trained on properties of single molecules, that is, multi-molecule models generated via the `--number_of_molecules` command are not supported.
+If installed from source, `cservier_interpret` can be replaced with `python interpret.py`.
 
 ## TensorBoard
 
 During training, TensorBoard logs are automatically saved to the same directory as the model checkpoints. To view TensorBoard logs, first install TensorFlow with `pip install tensorflow`. Then run `tensorboard --logdir=<dir>` where `<dir>` is the path to the checkpoint directory. Then navigate to [http://localhost:6006](http://localhost:6006).
+
