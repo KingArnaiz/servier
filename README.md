@@ -1,4 +1,4 @@
-# Molecular Property Prediction
+# Servier Data Science Technical Test
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/chemprop)](https://badge.fury.io/py/chemprop)
 [![PyPI version](https://badge.fury.io/py/chemprop.svg)](https://badge.fury.io/py/chemprop)
