@@ -1,0 +1,12 @@
+flask
+hyperopt
+matplotlib
+mordred
+networkx
+numpy
+python-ternary
+scikit-learn
+scipy
+tensorboardX
+tqdm
+git+https://github.com/bp-kelley/descriptastorus
