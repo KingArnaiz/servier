@@ -13,7 +13,7 @@ COPY --chown=$MAMBA_USER:$MAMBA_USER environment.yml /tmp/environment.yml
 RUN micromamba install -y -n base -f /tmp/environment.yml && \
     micromamba clean --all --yes
 
-COPY --chown=$MAMBA_USER:$MAMBA_USER . /opt/chemprop
+COPY --chown=$MAMBA_USER:$MAMBA_USER . /opt/servier
 
 WORKDIR /opt/chemprop
 
