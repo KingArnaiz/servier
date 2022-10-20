@@ -85,9 +85,6 @@ Newer CUDA driver versions are backward-compatible with older CUDA toolkit versi
 To set a specific CUDA toolkit version, add `cudatoolkit=X.Y` to `environment.yml` before building the Docker image.
 
 ## Web Interface
-
-For those less familiar with the command line, Servier also includes a web interface which allows for basic training and predicting. An example of the website (in demo mode with training disabled) is available here: [servier.csail.mit.edu](http://servier.csail.mit.edu/).
-
 You can start the web interface on your local machine in two ways. Flask is used for development mode while gunicorn is used for production mode.
 
 ### Flask
@@ -107,15 +104,9 @@ Next, navigate to `servier/web` and run `gunicorn --bind {host}:{port} 'wsgi:bui
    * Arguments including `init_db` and `demo` can be passed with this pattern: `'wsgi:build_app(init_db=True, demo=True)'` 
    * Gunicorn documentation can be found [here](http://docs.gunicorn.org/en/stable/index.html).
 
-## Within Python
-
-For information on the use of servier within a python script, refer to the [Within a python script](https://servier.readthedocs.io/en/latest/tutorial.html#within-a-python-script)
-section of the documentation. A [Google Colab notebook](https://colab.research.google.com/github/servier/servier/blob/master/colab_demo.ipynb) is also available with several examples. Note that this notebook is intended to be run in Google Colab rather than as a Jupyter notebook on your local machine. A similar notebook of examples is available as a [nanoHUB tool](https://nanohub.org/resources/servierdemo/).
-
-
 ## Data
 
-In order to train a model, you must provide training data containing molecules (as SMILES strings) and known target values.
+In order to train a model, you must provide training data containing molecules (as SMILES strings) and known target values. Data sets are available in the `data` directory.
 
 Servier can either train on a single target ("single tasking") or on multiple targets simultaneously ("multi-tasking").
 
@@ -124,13 +115,7 @@ There are four current supported dataset types. Targets with unknown values can 
 * **Classification.** Targets are binary (i.e. 0s and 1s) indicators of the classification.
 * **Multiclass.** Targets are integers (starting with zero) indicating which class the datapoint belongs to, out of a total number of exclusive classes indicated with `--multiclass_num_classes <int>`.
 
-The data file must be be a **CSV file with a header row**. For example:
-```
-smiles,NR-AR,NR-AR-LBD,NR-AhR
-CCOc1ccc2nc(S(N)(=O)=O)sc2c1,0,0,1
-CCN1C(=O)NC(c2ccccc2)C1=O,0,,0
-...
-```
+The data file must be be a **CSV file with a header row**. 
 
 By default, it is assumed that the SMILES are in the first column (can be changed using `--number_of_molecules`) and the targets are in the remaining columns. However, the specific columns containing the SMILES and targets can be specified using the `--smiles_columns <column_1> ...` and `--target_columns <column_1> <column_2> ...` flags, respectively.
 
@@ -149,7 +134,7 @@ servier_train --data_path data/sample_train.csv --dataset_type classification --
 
 A full list of available command-line arguments can be found in [servier/args.py](https://github.com/servier/servier/blob/master/servier/args.py).
 
-If installed from source, `servier_train` can be replaced with `python train.py`.
+If installed from source, `servier_train` can be replaced with `python train.py --data_path data/sample_train.csv --dataset_type classification --save_dir model1_checkpoints`.
 
 Notes:
 * The default metric for classification is AUC and the default metric for regression is RMSE. Other metrics may be specified with `--metric <metric>`.
@@ -175,7 +160,6 @@ The loss functions available for training are dependent on the selected dataset 
 * **Regression.** mse (default), bounded_mse, mve (mean-variance estimation, a.k.a. heteroscedastic loss), evidential.
 * **Classification.** binary_cross_entropy (default), mcc (a soft version of Matthews Correlation Coefficient), dirichlet (a.k.a. evidential classification)
 * **Multiclass.** cross_entropy (default), mcc (a soft version of Matthews Correlation Coefficient)
-* **Spectra.** sid (default, spectral information divergence), wasserstein (First-order Wasserstein distance a.k.a. earthmover's distance.)
 
 The regression loss functions `mve` and `evidential` function by minimizing the negative log likelihood of a predicted uncertainty distribution. If used during training, the uncertainty predictions from these loss functions can be used for uncertainty prediction during prediction tasks.
 ### Metrics
@@ -220,12 +204,6 @@ when training the new model. The model architecture of the new model should rese
 
 Certain portions of the model can be loaded from a previous model and frozen so that they will not be trainable, using the various frozen layer parameters. A path to a checkpoint file for frozen parameters is provided with the argument `--checkpoint_frzn <path>`. If this path is provided, the parameters in the MPNN portion of the model will be specified from the path and frozen. Layers in the FFNN portion of the model can also be applied and frozen in addition to freezing the MPNN using `--frzn_ffn_layers <number-of-layers>`. Model architecture of the new model should match the old model in any layers that are being frozen, but non-frozen layers can be different without affecting the frozen layers (e.g., MPNN alone is frozen and new model has a larger number of FFNN layers). Parameters provided with `--checkpoint_frzn` will overwrite initialization parameters from `--checkpoint_path` (or similar) that are frozen in the new model. At present, only one checkpoint can be provided for the `--checkpoint_frzn` and those parameters will be used for any number of submodels if `--ensemble_size` is specified. If multiple molecules (with multiple MPNNs) are being trained in the new model, the default behavior is for both of the new MPNNs to be frozen and drawn from the checkpoint. Only the first MPNN will be frozen and subsequent MPNNs still allowed to train if `--freeze_first_only` is specified.
 
-### Missing Target Values
-
-When training multitask models (models which predict more than one target simultaneously), sometimes not all target values are known for all molecules in the dataset. servier automatically handles missing entries in the dataset by masking out the respective values in the loss function, so that partial data can be utilized, too. The loss function is rescaled according to all non-missing values, and missing values furthermore do not contribute to validation or test errors. Training on partial data is therefore possible and encouraged (versus taking out datapoints with missing target entries). No keyword is needed for this behavior, it is the default.
-
-In contrast, when using `sklearn_train.py` (a utility script provided within servier that trains standard models such as random forests on Morgan fingerprints via the python package scikit-learn), multi-task models cannot be trained on datasets with partially missing targets. However, one can instead train individual models for each task (via the argument `--single_task`), where missing values are automatically removed from the dataset. Thus, the training still makes use of all non-missing values, but by training individual models for each task, instead of one model with multiple output values. This restriction only applies to sklearn models (via  :code:`sklearn_train` or :code:`python sklearn_train.py`), but NOT to default servier models via `servier_train` or `python train.py`. Alternatively, missing target values can be imputed by specifying `--impute_mode <single_task/linear/median/mean/frequent>`. The option `single_task` trains single task sklearn models on each task to predict missing values and is computationally expensive. The option `linear` trains a stochastic gradient linear model on each target to compute missing targets. Both `single_task` and `linear` are applicable to regression and classification task. For regression tasks, the options `median` and `mean` furthermore compute the median and mean of the training data. For classification tasks, `frequent` computes the most frequent value for each task. For all options, models are fitted to non-missing training targets and predict missing training targets. The test set is not affected by imputing.
-
 ### Weighted Training by Target and Data
 
 By default, each task in multitask training and each provided datapoint are weighted equally for training. Weights can be specified in either case to allow some tasks in training or some specified data points to be weighted more heavily than others in the training of the model.
@@ -254,7 +232,7 @@ servier_predict --test_path data/sample_test.csv --checkpoint_path model2_checkp
 
 Predictions made on an ensemble of models will return the average of the individual model predictions. To return the individual model predictions as well, include the `--individual_ensemble_predictions` argument.
 
-If installed from source, `servier_predict` can be replaced with `python predict.py`.
+If installed from source, `servier_predict` can be replaced with `python predict.py --test_path data/tox21.csv --checkpoint_dir tox21_checkpoints --preds_path tox21_preds.csv` or `python predict.py --test_path data/tox21.csv --checkpoint_path tox21_checkpoints/fold_0/model_0/model.pt --preds_path tox21_preds.csv`.
 
 ### Uncertainty Estimation
 
