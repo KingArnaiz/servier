@@ -15,13 +15,6 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/KingArnaiz/servier',
     download_url=f'https://github.com/KingArnaiz/servier/v_{__version__}.tar.gz',
-    #project_urls={
-    #    'Documentation': 'https://chemprop.readthedocs.io/en/latest/',
-    #    'Source': 'https://github.com/chemprop/chemprop',
-    #    'PyPi': 'https://pypi.org/project/chemprop/',
-    #    'Demo': 'http://chemprop.csail.mit.edu/',
-    #},
-    #license='MIT',
     packages=find_packages(),
     package_data={'servier': ['py.typed']},
     entry_points={
