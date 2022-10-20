@@ -2,8 +2,6 @@
 
 This repository contains message passing neural networks for molecular property prediction as described in the paper [Analyzing Learned Molecular Representations for Property Prediction](https://pubs.acs.org/doi/abs/10.1021/acs.jcim.9b00237) and as used in the paper [A Deep Learning Approach to Antibiotic Discovery](https://www.cell.com/cell/fulltext/S0092-8674(20)30102-1) for molecules.
 
-**Website:** A web prediction interface with some trained servier models is available at [servier.csail.mit.edu](http://servier.csail.mit.edu).
-
 ## Table of Contents
 
 - [Requirements](#requirements)
@@ -186,18 +184,14 @@ Metrics are used to evaluate the success of the model against the test set as th
 * **Regression.** rmse (default), mae, mse, r2, bounded_rmse, bounded_mae, bounded_mse (default if bounded_mse is loss function).
 * **Classification.** auc (default), prc-auc, accuracy, binary_cross_entropy, f1, mcc.
 * **Multiclass.** cross_entropy (default), accuracy, f1, mcc.
-* **Spectra.** sid (default), wasserstein.
 
 When a multitask model is used, the metric score used for evaluation at each epoch or for choosing the best set of hyperparameters during hyperparameter search is obtained by taking the mean of the metric scores for each task. Some metrics scale with the magnitude of the targets (most regression metrics), so geometric mean instead of arithmetic mean is used in those cases in order to avoid having the mean score dominated by changes in the larger magnitude task.
+
 ### Cross validation and ensembling
 
 k-fold cross-validation can be run by specifying `--num_folds <k>`. The default is `--num_folds 1`. Each trained model will have different data splits. The reported test score will be the average of the metrics from each fold.
 
 To train an ensemble, specify the number of models in the ensemble with `--ensemble_size <n>`. The default is `--ensemble_size 1`. Each trained model within the ensemble will share data splits. The reported test score for one ensemble is the metric applied to the averaged prediction across the models. Ensembling and cros-validation can be used at the same time.
-
-### Aggregation
-
-By default, the atom-level representations from the message passing network are averaged over all atoms of a molecule to yield a molecule-level representation. Alternatively, the atomic vectors can be summed up (by specifying `--aggregation sum`) or summed up and divided by a constant number N (by specifying `--aggregation norm --aggregation_norm <N>`). A reasonable value for N is usually the average number of atoms per molecule in the dataset of interest. The default is `--aggregation_norm 100`.
 
 ### Additional Features
 
@@ -213,13 +207,6 @@ If you install from source, you can modify the code to load custom features as f
 #### Molecule-Level RDKit 2D Features
 
 As a starting point, we recommend using pre-normalized RDKit features by using the `--features_generator rdkit_2d_normalized --no_features_scaling` flags. In general, we recommend NOT using the `--no_features_scaling` flag (i.e. allow the code to automatically perform feature scaling), but in the case of `rdkit_2d_normalized`, those features have been pre-normalized and don't require further scaling.
-
-The full list of available features for `--features_generator` is as follows. 
-
-`morgan` is binary Morgan fingerprints, radius 2 and 2048 bits.
-`morgan_count` is count-based Morgan, radius 2 and 2048 bits.
-`rdkit_2d` is an unnormalized version of 200 assorted rdkit descriptors. Full list can be found at the bottom of our paper: https://arxiv.org/pdf/1904.01561.pdf
-`rdkit_2d_normalized` is the CDF-normalized version of the 200 rdkit descriptors.
 
 ### Pretraining
 
@@ -246,10 +233,6 @@ By default, each task in multitask training and each provided datapoint are weig
 Using the `--target_weights` argument followed by a list of numbers equal in length to the number of tasks in multitask training, different tasks can be given more weight in parameter updates during training. For instance, in a multitask training with two tasks, the argument `--target_weights 1 2` would give the second task twice as much weight in model parameter updates. Provided weights must be non-negative. Values are normalized to make the average weight equal 1. Target weights are not used with the validation set for the determination of early stopping or in evaluation of the test set.
 
 Using the `--data_weights_path` argument followed by a path to a data file containing weights will allow each individual datapoint in the training data to be given different weight in parameter updates. Formatting of this file is similar to provided features CSV files: they should contain only a single column with one header row and a numerical value in each row that corresponds to the order of datapoints provided with `--data_path`. Data weights should not be provided for validation or test sets if they are provided through the arguments `--separate_test_path` or `--separate_val_path`. Provided weights must be non-negative. Values are normalized to make the average weight equal 1. Data weights are not used with the validation set for the determination of early stopping or in evaluation of the test set.
-
-### Caching
-
-By default, the molecule objects created from each SMILES string are cached for all dataset sizes, and the graph objects created from each molecule object are cached for datasets up to 10000 molecules. If memory permits, you may use the keyword `--cache_cutoff inf` to set this cutoff from 10000 to infinity to always keep the generated graphs in cache (or to another integer value for custom behavior). This may speed up training (depending on the dataset size, molecule size, number of epochs and GPU support), since the graphs do not need to be recreated each epoch, but increases memory usage considerably. Below the cutoff, graphs are created sequentially in the first epoch. Above the cutoff, graphs are created in parallel (on `--num_workers <int>` workers) for each epoch. If training on a GPU, training without caching and creating graphs on the fly in parallel is often preferable. On CPU, training with caching if often preferable for medium-sized datasets and a very low number of CPUs. If a very large dataset causes memory issues, you might turn off caching even of the molecule objects via the commands `--no_cache_mol` to reduce memory usage further.
 
 ## Predicting
 
@@ -281,12 +264,7 @@ The uncertainty of predictions made in servier can be estimated by several diffe
 * `dropout` Intended for use with a single model and not an ensemble. This method uses Monte Carlo dropout to generate a virtual ensemble of models and reports the ensemble variance of the predictions. The number of models generated and the probability of dropout can be changed using `--uncertainty_dropout_p <float>` and `--dropout_sampling_size <int>`, respectively. Note that this dropout is distinct from dropout regularization used during training, which is not active during predictions.
 * `mve` When mve has been used for the training loss function on regression datasets, this method uses the separate variance prediction of the model. The variance result from ensembling models together includes the variance contribution of the different models having different mean predictions.
 * `evidential_total`, `evidential_epistemic`, `evidential_aleatoric` When evidential was used as the training loss function for regression datasets, these methods use the variance prediction of the model. The evidential output includes different functions intended to divide the variance into epistemic and aleatoric uncertainty. The variance result from ensembling models together includes the variance contribution of the different models having different mean predictions.
-* `spectra_roundrobin` For an ensemble of spectra predictions. Calculates the pairwise SID between the predictions made by each of the ensemble submodels. Returns the average SID.
 * `classification` The predictions of classification and multiclass dataset types are inherently probabilistic already. Used by default for classification and multiclass as needed.
-
-### Uncertainty Calibration
-
-Uncertainty predictions may be calibrated to improve their performance on new predictions. Calibration methods are selected using `--calibration_method <method>`, options provided below. An additional dataset to use in calibration is provided through `--calibration_path <path>`, along with necessary features like `--calibration_features_path <path>`. As with the data used in training, calibration data for multitask models are allowed to have gaps and missing targets in the data.
 
 **Regression** Calibrated regression outputs can be in the form of a standard deviation or an interval, as specified with the argument `--regression_calibrator_metric <"stdev" or "interval">`. The interval can be set using `--calibration_interval_percentile <float>` in the range (1,100).
 * `zscaling` Assumes that errors are normally distributed according to the estimated variance for each prediction. Applies a constant multiple to all stdev or interval outputs in order to minimize the negative log likelihood for the normal distributions. (https://arxiv.org/abs/1905.11659)
@@ -355,15 +333,6 @@ Parallel instances of hyperparameter optimization that share a checkpoint direct
 * Up to `n-1` extra total trials will be run above the chosen `num_iters`, though each instance will be exposed to at least that number of iterations.
 * The last parallel instance to complete is the only one that is aware of all the trials when reporting results.
 
-### Random or Directed Search
-
-As part of the hyperopt search algorithm, the first trial configurations for the model will be randomly spread through the search space. The number of randomized trials can be altered with the argument `--startup_random_iters <int>`. By default, the number or random trials will be half the number of total trials. After this number of trial iterations has been carried out, subsequent trials will use the directed search algorithm to select parameter configurations. This startup count considers the total number of trials in the checkpoint directory rather than the number that has been carried out by an individual instance of hyperparamter optimization.
-
-
-### Manual Trials
-
-Manual training instances outside of hyperparameter optimization may also be considered in the history of attempted trials. The paths to the save_dirs for these training instances can be specified with `--manual_trial_dirs <list-of-directories>`. These directories must contain the files `test_scores.csv` and `args.json` as generated during training. To work appropriately, these training instances must be consistent with the parameter space being searched in hyperparameter optimization (including the hyperparameter optimization default of ffn_hidden_size being set equal to hidden_size). Manual trials considered with this argument are not added to the checkpoint directory.
-
 ## Encode Fingerprint Latent Representation
 
 To load a trained model and encode the fingerprint latent representation of molecules, run `fingerprint.py` and specify:
@@ -391,12 +360,12 @@ If installed from source, `servier_fingerprint` can be replaced with `python fin
 
 It is often helpful to provide explanation of model prediction (i.e., this molecule is toxic because of this substructure). Given a trained model, you can interpret the model prediction using the following command:
 ```
-servier_interpret --data_path data/tox21.csv --checkpoint_dir tox21_checkpoints/fold_0/ --property_id 1
+servier_interpret --data_path data/sample_test.csv --checkpoint_dir model1_checkpoints/fold_0/ --property_id 1
 ```
 
 If installed from source, `servier_interpret` can be replaced with `python interpret.py`.
 
 ## TensorBoard
 
-During training, TensorBoard logs are automatically saved to the same directory as the model checkpoints. To view TensorBoard logs, first install TensorFlow with `pip install tensorflow`. Then run `tensorboard --logdir=<dir>` where `<dir>` is the path to the checkpoint directory. Then navigate to [http://localhost:6006](http://localhost:6006).
+During training, TensorBoard logs are automatically saved to the same directory as the model checkpoints. To view TensorBoard logs, first install TensorFlow with `pip install tensorflow`. Then run `tensorboard --logdir=<dir>` where `<dir>` is the path to the checkpoint directory. Then navigate to [http://localhost:5000](http://localhost:5000).
 
