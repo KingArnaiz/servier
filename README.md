@@ -311,29 +311,6 @@ Parallel instances of hyperparameter optimization that share a checkpoint direct
 * Up to `n-1` extra total trials will be run above the chosen `num_iters`, though each instance will be exposed to at least that number of iterations.
 * The last parallel instance to complete is the only one that is aware of all the trials when reporting results.
 
-## Encode Fingerprint Latent Representation
-
-To load a trained model and encode the fingerprint latent representation of molecules, run `fingerprint.py` and specify:
-* `--test_path <path>` Path to the data to predict on.
-* A checkpoint by using either:
-  * `--checkpoint_dir <dir>` Directory where the model checkpoint is saved (i.e. `--save_dir` during training).
-  * `--checkpoint_path <path>` Path to a model checkpoint file (`.pt` file).
-* `--preds_path` Path where a CSV file containing the encoded fingerprint vectors will be saved.
-* Any other arguments that you would supply for a prediction, such as atom or bond features.
-
-Latent representations of molecules are taken from intermediate stages of the prediction model. This latent representation can be taken at the output of the MPNN (default) or from the last input layer of the FFNN, specified using `--fingerprint_type <MPN or last_FFN>`. Fingerprint encoding uses the same set of arguments as making predictions. If multiple checkpoint files are supplied through `--checkpoint_dir`, then the fingerprint encodings for each of the models will be provided concatenated together as a longer vector.
-
-Example input:
-```
-servier_fingerprint --test_path data/tox21.csv --checkpoint_dir tox21_checkpoints --preds_path tox21_fingerprint.csv
-```
-or
-```
-servier_fingerprint --test_path data/tox21.csv --checkpoint_path tox21_checkpoints/fold_0/model_0/model.pt --preds_path tox21_fingerprint.csv
-```
-
-If installed from source, `servier_fingerprint` can be replaced with `python fingerprint.py`.
-
 ## Interpreting
 
 It is often helpful to provide explanation of model prediction (i.e., this molecule is toxic because of this substructure). Given a trained model, you can interpret the model prediction using the following command:
@@ -347,3 +324,37 @@ If installed from source, `servier_interpret` can be replaced with `python inter
 
 During training, TensorBoard logs are automatically saved to the same directory as the model checkpoints. To view TensorBoard logs, first install TensorFlow with `pip install tensorflow`. Then run `tensorboard --logdir=<dir>` where `<dir>` is the path to the checkpoint directory. Then navigate to [http://localhost:5000](http://localhost:5000).
 
+## Results
+We run the three models with 5 number of folds and a combination of ensemble learning. We have the folllowing results:
+
+Results on classification test sets (AUC score, the higher the better)
+
+### Model 1
+| Folds |	AUC |
+| :---: | :---: |
+| 1 |  0.75 |
+| 2 |  0.77|
+| 3 |  0.75 |
+| 4 | 0.79  |
+| 5 |  0.70 |
+| Overall |  0.75 ± 0.03 |
+
+### Model 2
+| Folds |	AUC |
+| :---: | :---: |
+| 1 |  0.74 |
+| 2 |  0.75|
+| 3 |  0.71 |
+| 4 | 0.77  |
+| 5 |  0.65 |
+| Overall |  0.73 ± 0.04 |
+
+### Model 3
+| Folds |	AUC |
+| :---: | :---: |
+| 1 |  0.69 |
+| 2 |  0.72|
+| 3 |  0.72 |
+| 4 | 0.72  |
+| 5 |  0.69 |
+| Overall |  0.71 ± 0.01 |
