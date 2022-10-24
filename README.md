@@ -232,40 +232,7 @@ servier_predict --test_path data/sample_test.csv --checkpoint_path model2_checkp
 
 Predictions made on an ensemble of models will return the average of the individual model predictions. To return the individual model predictions as well, include the `--individual_ensemble_predictions` argument.
 
-If installed from source, `servier_predict` can be replaced with `python predict.py --test_path data/tox21.csv --checkpoint_dir tox21_checkpoints --preds_path tox21_preds.csv` or `python predict.py --test_path data/tox21.csv --checkpoint_path tox21_checkpoints/fold_0/model_0/model.pt --preds_path tox21_preds.csv`.
-
-### Uncertainty Estimation
-
-The uncertainty of predictions made in servier can be estimated by several different methods. Uncertainty estimation is carried out alongside model value prediction and reported in the predictions csv file when the argument `--uncertainty_method <method>` is provided. If no uncertainty method is provided, then only the model value predictions will be carried out. The available methods are:
-
-* `ensemble` For a prediction using an ensemble of models. Returns the variance of predictions made by each of the ensemble submodels. Ensemble variance can be used with any dataset type, but the results are only usable for calibration or evaluation with regression datasets.
-* `dropout` Intended for use with a single model and not an ensemble. This method uses Monte Carlo dropout to generate a virtual ensemble of models and reports the ensemble variance of the predictions. The number of models generated and the probability of dropout can be changed using `--uncertainty_dropout_p <float>` and `--dropout_sampling_size <int>`, respectively. Note that this dropout is distinct from dropout regularization used during training, which is not active during predictions.
-* `mve` When mve has been used for the training loss function on regression datasets, this method uses the separate variance prediction of the model. The variance result from ensembling models together includes the variance contribution of the different models having different mean predictions.
-* `evidential_total`, `evidential_epistemic`, `evidential_aleatoric` When evidential was used as the training loss function for regression datasets, these methods use the variance prediction of the model. The evidential output includes different functions intended to divide the variance into epistemic and aleatoric uncertainty. The variance result from ensembling models together includes the variance contribution of the different models having different mean predictions.
-* `classification` The predictions of classification and multiclass dataset types are inherently probabilistic already. Used by default for classification and multiclass as needed.
-
-**Regression** Calibrated regression outputs can be in the form of a standard deviation or an interval, as specified with the argument `--regression_calibrator_metric <"stdev" or "interval">`. The interval can be set using `--calibration_interval_percentile <float>` in the range (1,100).
-* `zscaling` Assumes that errors are normally distributed according to the estimated variance for each prediction. Applies a constant multiple to all stdev or interval outputs in order to minimize the negative log likelihood for the normal distributions. (https://arxiv.org/abs/1905.11659)
-* `tscaling` Similar to zscaling. Assumes that the errors are normally distributed, but accounts for the ensemble size and uncertainty in the sample variance by using a sample-size reduced t-distribution in the negative log likelihood. Works best when errors are mostly due to variability between model instances and not dataset noise or model bias.
-* `zelikman_interval` Assumes that the error distribution is the same for each prediction but scaled by the uncalibrated standard deviation for each. Multiplies the uncalibrated standard deviation by a factor necessary to cover the specified interval of the calibration set. Does not assume a Gaussian distribution. Intended for use with intervals but can return a stdev as well. (https://arxiv.org/abs/2005.12496)
-* `mve_weighting` For use with ensembles of models trained with mve or evidential loss function. Uses a weighted average of the predicted variances to achieve a minimum negative log likelihood of predictions. (https://doi.org/10.1186/s13321-021-00551-x)
-**Classification**
-* `platt` Uses a linear scaling before the sigmoid function in prediction to minimize the negative log likelihood of the predictions. If the model checkpoint was generated after servier v1.5.0, then a Bayesian correction is applied to account for the class balance in the training set during prediction. Implemented for classification but not multiclass datasets. (https://arxiv.org/abs/1706.04599)
-* `isotonic` Fits an isotonic regression model to the predictions. Prediction outputs are transformed using a stepped histogram-style to match the empirical probability observed in the calibration data. Number and size of the histogram bins are procedurally decided. Histogram bins are wider in the regions of the model output that are less reliable in ordering confidence. Implemented for both classification and multiclass datasets. (https://arxiv.org/abs/1706.04599)
-
-### Uncertainty Evaluation Metrics
-
-The performance of uncertainty predictions (calibrated or uncalibrated) as evaluated on the test set using different evaluation metrics as specified with `--evaluation_methods <[methods]>`. Evaluation scores will be saved at the path provided with `--evaluation_scores_path <path.csv>`. If no path is provided to save the scores, then the results will only appear in the output trace. Multiple evaluation methods can be provided and they will be calculated separately for each model task. Evaluation is only available when the target values are provided with the data in `--test_path <path.csv>`. As with the data used in training, evaluation data for multitask models are allowed to have gaps and missing targets in the data.
-
-* Any valid classification or multiclass metric. Because classification and multiclass outputs are inherently probabilistic, any metric used to assess them during training is appropriate to evaluate the confidences produced after calibration.
-* `nll` Returns the average negative log likelihood of the real target as indicated by the uncertainty predictions. Enabled for regression, classification, and multiclass dataset types.
-* `spearman` A regression evaluation metric. Returns the Spearman rank correlation between the predicted uncertainty and the actual error in predictions. Only considers ordering, does not assume a particular probability distribution.
-* `ence` Expected normalized calibration error. A regression evaluation metric. Bins model prediction according to uncertainty prediction and compares the RMSE in each bin versus the expected error based on the predicted uncertainty variance then scaled by variance. (discussed in https://doi.org/10.1021/acs.jcim.9b00975)
-* `miscalibration_area` A regression evaluation metric. Calculates the model's performance of expected probability versus realized probability at different points along the probability distribution. Values range (0, 0.5) with perfect calibration at 0. (discussed in https://doi.org/10.1021/acs.jcim.9b00975)
-
-Different evaluation metrics consider different aspects of uncertainty. It is often appropriate to consider multiple metrics. For intance, miscalibration error is important for evaluating uncertainty magnitude but does not indicate that the uncertainty function discriminates well between different outputs. Similarly, spearman tests ordering but not prediction magnitude.
-
-Evaluations can be used to compare different uncertainty methods and different calibration methods for a given dataset. Using evaluations to compare between datasets may not be a fair comparison and should be done cautiously.
+If installed from source, `servier_predict` can be replaced with `python predict.py --test_path data/sample_test.csv --checkpoint_dir model2_checkpoints --preds_path sample_test_preds.csv` or `python predict.py --test_path data/sample_test.csv --checkpoint_path model2_checkpoints/fold_0/model_0/model.pt --preds_path sample_test_preds.csv`.
 
 ## Hyperparameter Optimization
 
@@ -299,17 +266,6 @@ Choosing to include additional search parameters should be undertaken carefully.
 For best results, the `--epochs` specified during hyperparameter search should be the same as in the intended final application of the model. Learning rate parameters are especially sensitive to the number of epochs used. Note that the number of epochs is not a hyperparameter search option.
 
 The search space for init_lr and final_lr values are defined as fractions of the max_lr value. The search space for warmup_epochs is set by fraction of the `--epochs` training argument. The search for aggregation_norm values is only relevant when the aggregation function is set to norm and can otherwise be neglected. If a separate training argument is provided that is included in the search parameters, the search will overwrite the specified value (e.g., `--depth 5 --search_parameter_keywords depth`).
-
-### Checkpoints and Parallel Operation
-
-Results of completed trial configurations will be stored there and may serve as checkpoints for other instances of hyperparameter optimization if the directory for hyperopt checkpoint files has been specified, `--hyperopt_checkpoint_dir <path>`. If `--hyperopt_checkpoint_dir` is not specified, then checkpoints will default to being stored with the hyperparame. Interrupted hyperparameter optimizations can be restarted by specifying the same directory. Previously completed hyperparameter optimizations can be used as the starting point for new optimizations with a larger selected number of iterations. Note that the `--num_iters <int>` argument will count all previous checkpoints saved in the directory towards the total number of iterations, and if the existing number of checkpoints exceeds this argment then no new trials will be carried out.
-
-Parallel instances of hyperparameter optimization that share a checkpoint directory will have access to the shared results of hyperparameter optimization trials, allowing them to arrive at the desired total number of iterations collectively more quickly. In this way multiple GPUs or other computing resources can be applied to the search. Each instance of hyperparameter optimization is unaware of parallel trials that have not yet completed. This has several implications when running `n` parallel instances:
-* A parallel search will have different information and search different parameters than a single instance sequential search.
-* New trials will not consider the parameters in currently running trials, in rare cases leading to duplication.
-* Up to `n-1` extra random search iterations may occur above the number specified with `--startup_random_iters`.
-* Up to `n-1` extra total trials will be run above the chosen `num_iters`, though each instance will be exposed to at least that number of iterations.
-* The last parallel instance to complete is the only one that is aware of all the trials when reporting results.
 
 ## Interpreting
 
