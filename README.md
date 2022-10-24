@@ -204,14 +204,6 @@ when training the new model. The model architecture of the new model should rese
 
 Certain portions of the model can be loaded from a previous model and frozen so that they will not be trainable, using the various frozen layer parameters. A path to a checkpoint file for frozen parameters is provided with the argument `--checkpoint_frzn <path>`. If this path is provided, the parameters in the MPNN portion of the model will be specified from the path and frozen. Layers in the FFNN portion of the model can also be applied and frozen in addition to freezing the MPNN using `--frzn_ffn_layers <number-of-layers>`. Model architecture of the new model should match the old model in any layers that are being frozen, but non-frozen layers can be different without affecting the frozen layers (e.g., MPNN alone is frozen and new model has a larger number of FFNN layers). Parameters provided with `--checkpoint_frzn` will overwrite initialization parameters from `--checkpoint_path` (or similar) that are frozen in the new model. At present, only one checkpoint can be provided for the `--checkpoint_frzn` and those parameters will be used for any number of submodels if `--ensemble_size` is specified. If multiple molecules (with multiple MPNNs) are being trained in the new model, the default behavior is for both of the new MPNNs to be frozen and drawn from the checkpoint. Only the first MPNN will be frozen and subsequent MPNNs still allowed to train if `--freeze_first_only` is specified.
 
-### Weighted Training by Target and Data
-
-By default, each task in multitask training and each provided datapoint are weighted equally for training. Weights can be specified in either case to allow some tasks in training or some specified data points to be weighted more heavily than others in the training of the model.
-
-Using the `--target_weights` argument followed by a list of numbers equal in length to the number of tasks in multitask training, different tasks can be given more weight in parameter updates during training. For instance, in a multitask training with two tasks, the argument `--target_weights 1 2` would give the second task twice as much weight in model parameter updates. Provided weights must be non-negative. Values are normalized to make the average weight equal 1. Target weights are not used with the validation set for the determination of early stopping or in evaluation of the test set.
-
-Using the `--data_weights_path` argument followed by a path to a data file containing weights will allow each individual datapoint in the training data to be given different weight in parameter updates. Formatting of this file is similar to provided features CSV files: they should contain only a single column with one header row and a numerical value in each row that corresponds to the order of datapoints provided with `--data_path`. Data weights should not be provided for validation or test sets if they are provided through the arguments `--separate_test_path` or `--separate_val_path`. Provided weights must be non-negative. Values are normalized to make the average weight equal 1. Data weights are not used with the validation set for the determination of early stopping or in evaluation of the test set.
-
 ## Predicting
 
 To load a trained model and make predictions, run `predict.py` and specify:
@@ -248,24 +240,6 @@ servier_train --data_path <data_path> --dataset_type <type> --config_path <confi
 ```
 
 Note that the hyperparameter optimization script sees all the data given to it. The intended use is to run the hyperparameter optimization script on a dataset with the eventual test set held out. If you need to optimize hyperparameters separately for several different cross validation splits, you should e.g. set up a bash script to run hyperparameter_optimization.py separately on each split's training and validation data with test held out.
-
-### Choosing the Search Parameters
-
-The parameter space being searched can be changed to include different sets of model hyperparameters. These can be selected using the argument `--search_parameter_keywords <list-of-keywords>`. The available keywords are listed below. Some keywords refer to bundles of parameters or other special behavior. Note that the search ranges for each parameter is hardcoded and can be viewed or changed in `servier/hyperopt_utils.py`.
-
-Special keywords
-* basic - the default set of hyperparameters for search: depth, ffn_num_layers, dropout, and linked_hidden_size.
-* linked_hidden_size - search for hidden_size and ffn_hidden_size, but constrained for them to have the same value. This allows search through both but with one fewer degree of freedom.
-* learning_rate - search for max_lr, init_lr, final_lr, and warmup_epochs.
-* all - include search for all inidividual keyword options
-Individual supported parameters
-* activation, aggregation, aggregation_norm, batch_size, depth, dropout, ffn_hidden_size, ffn_num_layers, final_lr, hidden_size, init_lr, max_lr, warmup_epochs
-
-Choosing to include additional search parameters should be undertaken carefully. The number of possible parameter combinations increases combinatorially with the addition of more hyperparameters, so the search for an optimal configuration will become more difficult accordingly. The recommendation from Hyperopt is to use at least 10 trials per hyperparameter for an appropriate search as a rule of thumb, but even more will be necessary at higher levels of search complexity or to obtain better convergence to the optimal hyperparameters. Steps to reduce the complexity of a search space should be considered, such as excluding low-sensitivity parameters or those for which a judgement can be made ahead of time. Splitting the search into two steps can also reduce overall complexity. The `all` search option should only be used in situations where the dataset is small and a very large number of trials can be used.
-
-For best results, the `--epochs` specified during hyperparameter search should be the same as in the intended final application of the model. Learning rate parameters are especially sensitive to the number of epochs used. Note that the number of epochs is not a hyperparameter search option.
-
-The search space for init_lr and final_lr values are defined as fractions of the max_lr value. The search space for warmup_epochs is set by fraction of the `--epochs` training argument. The search for aggregation_norm values is only relevant when the aggregation function is set to norm and can otherwise be neglected. If a separate training argument is provided that is included in the search parameters, the search will overwrite the specified value (e.g., `--depth 5 --search_parameter_keywords depth`).
 
 ## Interpreting
 
